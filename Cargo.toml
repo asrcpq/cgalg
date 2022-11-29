@@ -1,0 +1,7 @@
+[package]
+name = "cgalg"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rust_stddep = {path = "../rust_stddep", features = ["nalgebra"]}
