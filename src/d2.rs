@@ -52,9 +52,45 @@ pub fn triangle_collision(t1: [V2; 3], t2: [V2; 3]) -> bool {
 	false
 }
 
+pub fn point_lineseg_closest(p: V2, l: [V2; 2]) -> V2 {
+	let l01 = l[1] - l[0];
+	let p0 = p - l[0];
+	let p0proj = p0.dot(&l01) / l01.norm_squared();
+	if p0proj <= 0.0 {
+		return l[0]
+	}
+	if p0proj >= 1.0 {
+		return l[1]
+	}
+	l[0] * (1f32 - p0proj) + l[1] * p0proj
+}
+
 #[cfg(test)]
 mod test {
 	use super::*;
+
+	#[test]
+	fn test_point_lineseg_closest() {
+		let feps = 1e-6f32;
+		let p = V2::new(0.0, 0.0);
+		let l = [
+			V2::new(1.0, 0.0),
+			V2::new(2.0, 0.0),
+		];
+		let dp = point_lineseg_closest(p, l) - V2::new(1.0, 0.0);
+		assert!(dp.norm() < feps);
+
+		let p1 = V2::new(0.0, 0.0);
+		let p2 = V2::new(0.0, 2.0);
+		let l = [
+			V2::new(1.0, 0.0),
+			V2::new(0.0, 1.0),
+		];
+		let dp = point_lineseg_closest(p1, l) - V2::new(0.5, 0.5);
+		assert!(dp.norm() < feps);
+		let dp = point_lineseg_closest(p2, l) - V2::new(0.0, 1.0);
+		assert!(dp.norm() < feps);
+	}
 
 	fn point_in_triangle_permutated(p: V2, t: [V2; 3]) -> bool {
 		let mut result = None;
