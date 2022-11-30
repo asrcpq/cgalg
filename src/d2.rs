@@ -1,5 +1,4 @@
 use crate::V2;
-
 // all collisions here does not include contant
 
 pub fn lineseg_collision(a: [V2; 2], b: [V2; 2]) -> bool {
@@ -63,6 +62,17 @@ pub fn point_lineseg_closest(p: V2, l: [V2; 2]) -> V2 {
 		return l[1]
 	}
 	l[0] * (1f32 - p0proj) + l[1] * p0proj
+}
+
+pub fn angle_dist(a1: f32, a2: f32) -> f32 {
+	const PI: f32 = std::f32::consts::PI;
+	let mut a3 = a1 - a2;
+	if a3 >= PI {
+		a3 -= PI * 2f32;
+	} else if a3 < -PI {
+		a3 += PI * 2f32;
+	}
+	a3
 }
 
 #[cfg(test)]
