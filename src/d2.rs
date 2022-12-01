@@ -1,6 +1,8 @@
 use crate::V2;
 // all collisions here does not include contant
 
+const PI: f32 = std::f32::consts::PI;
+
 pub fn lineseg_collision(a: [V2; 2], b: [V2; 2]) -> bool {
 	// u * a01 + a0 = v * b01 + b0
 	// a01 u + b10 v = b0 - a0 = ab
@@ -64,9 +66,10 @@ pub fn point_lineseg_closest(p: V2, l: [V2; 2]) -> V2 {
 	l[0] * (1f32 - p0proj) + l[1] * p0proj
 }
 
+// angle from a1 to a2, ccw, -pi to pi
+// a1, a2 must in -pi to pi
 pub fn angle_dist(a1: f32, a2: f32) -> f32 {
-	const PI: f32 = std::f32::consts::PI;
-	let mut a3 = a1 - a2;
+	let mut a3 = a2 - a1;
 	if a3 >= PI {
 		a3 -= PI * 2f32;
 	} else if a3 < -PI {
@@ -77,18 +80,18 @@ pub fn angle_dist(a1: f32, a2: f32) -> f32 {
 
 #[cfg(test)]
 mod test {
+	const FEPS: f32 = 1e-6f32;
 	use super::*;
 
 	#[test]
 	fn test_point_lineseg_closest() {
-		let feps = 1e-6f32;
 		let p = V2::new(0.0, 0.0);
 		let l = [
 			V2::new(1.0, 0.0),
 			V2::new(2.0, 0.0),
 		];
 		let dp = point_lineseg_closest(p, l) - V2::new(1.0, 0.0);
-		assert!(dp.norm() < feps);
+		assert!(dp.norm() < FEPS);
 
 		let p1 = V2::new(0.0, 0.0);
 		let p2 = V2::new(0.0, 2.0);
@@ -97,9 +100,9 @@ mod test {
 			V2::new(0.0, 1.0),
 		];
 		let dp = point_lineseg_closest(p1, l) - V2::new(0.5, 0.5);
-		assert!(dp.norm() < feps);
+		assert!(dp.norm() < FEPS);
 		let dp = point_lineseg_closest(p2, l) - V2::new(0.0, 1.0);
-		assert!(dp.norm() < feps);
+		assert!(dp.norm() < FEPS);
 	}
 
 	fn point_in_triangle_permutated(p: V2, t: [V2; 3]) -> bool {
@@ -270,5 +273,17 @@ mod test {
 			V2::new(1.0, 0.0),
 		];
 		assert!(!lineseg_collision(l1, l2));
+	}
+
+	fn ftest(f1: f32, f2: f32) {
+		assert!((f1 - f2).abs() < FEPS)
+	}
+
+	#[test]
+	fn test_angle_dist() {
+		ftest(angle_dist(-PI, 1f32), 1f32 - PI);
+		ftest(angle_dist(0f32, 1f32), 1f32);
+		ftest(angle_dist(-1f32, 1f32), 2f32);
+		ftest(angle_dist(1f32, 0f32), -1f32);
 	}
 }
