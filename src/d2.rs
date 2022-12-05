@@ -36,14 +36,20 @@ pub fn point_in_triangle(p: V2, t: [V2; 3]) -> bool {
 	nb > 0f32 && na + nb < 1f32
 }
 
-pub fn triangle_collision(t1: [V2; 3], t2: [V2; 3]) -> bool {
-	// step1 check 2 sides of t1 collides with 3 sides of t2
+// line segs only
+pub fn triangle_collision1(t1: [V2; 3], t2: [V2; 3]) -> bool {
 	if lineseg_collision([t1[0], t1[1]], [t2[0], t2[1]]) { return true }
 	if lineseg_collision([t1[0], t1[1]], [t2[0], t2[2]]) { return true }
 	if lineseg_collision([t1[0], t1[1]], [t2[1], t2[2]]) { return true }
 	if lineseg_collision([t1[0], t1[2]], [t2[0], t2[1]]) { return true }
 	if lineseg_collision([t1[0], t1[2]], [t2[0], t2[2]]) { return true }
 	if lineseg_collision([t1[0], t1[2]], [t2[1], t2[2]]) { return true }
+	false
+}
+
+pub fn triangle_collision(t1: [V2; 3], t2: [V2; 3]) -> bool {
+	// step1 check 2 sides of t1 collides with 3 sides of t2
+	if triangle_collision1(t1, t2) { return true }
 
 	// step2 check inner point
 	if point_in_triangle(t2[0], t1) { return true }
