@@ -3,6 +3,22 @@ use crate::V2;
 
 const PI: f32 = std::f32::consts::PI;
 
+pub fn ray_lineseg_collision(p: V2, dir: V2, l: [V2; 2]) -> Option<V2> {
+	let dl = l[1] - l[0];
+	let pa = p - l[0];
+
+	let d = dl[0] * dir[1] - dl[1] * dir[0];
+	if d == 0f32 { return None }
+	let nj = pa[0] * dir[1] - pa[1] * dir[0];
+	let nk = dl[0] * pa[1] - dl[1] * pa[0];
+	let j = nj / d;
+	let k = -nk / d;
+	if k <= 0f32 || j <= 0f32 || j >= 1f32 {
+		return None
+	}
+	Some(p + dir * k)
+}
+
 pub fn lineseg_collision(a: [V2; 2], b: [V2; 2]) -> bool {
 	// u * a01 + a0 = v * b01 + b0
 	// a01 u + b10 v = b0 - a0 = ab
@@ -291,5 +307,22 @@ mod test {
 		ftest(angle_dist(0f32, 1f32), 1f32);
 		ftest(angle_dist(-1f32, 1f32), 2f32);
 		ftest(angle_dist(1f32, 0f32), -1f32);
+	}
+
+	#[test]
+	fn test_ray_lineseg_collision() {
+		let result = ray_lineseg_collision(
+			V2::new(0f32, 0f32),
+			V2::new(1f32, 1f32).normalize(),
+			[V2::new(0f32, 1f32), V2::new(1f32, 0f32)],
+		).unwrap();
+		assert!((result - V2::new(0.5, 0.5)).norm() < FEPS);
+
+		let result = ray_lineseg_collision(
+			V2::new(0f32, 0f32),
+			V2::new(0f32, 1f32).normalize(),
+			[V2::new(1f32, 0f32), V2::new(2f32, 0f32)],
+		);
+		assert!(result.is_none());
 	}
 }
