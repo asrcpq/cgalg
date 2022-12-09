@@ -3,7 +3,27 @@ use crate::V2;
 
 const PI: f32 = std::f32::consts::PI;
 
-pub fn ray_lineseg_collision(p: V2, dir: V2, l: [V2; 2]) -> Option<V2> {
+// return pos, radius
+pub fn incircle(t: [V2; 3]) -> (V2, f32) {
+	let t01 = t[1] - t[0];
+	let t02 = t[2] - t[0];
+	let l0 = (t[2] - t[1]).norm();
+	let l1 = t02.norm();
+	let l2 = t01.norm();
+	let peri = l0 + l1 + l2;
+	if peri == 0f32 {
+		eprintln!("bad triangle");
+		return (t[0], 0f32);
+	}
+
+	let area_double = (t01[0] * t02[1] - t01[1] * t02[0]).abs();
+	let inrad = area_double / peri;
+
+	let incenter = (t[0] * l0 + t[1] * l1 + t[2] * l2) / peri;
+	(incenter, inrad)
+}
+
+pub fn ray_lineseg_collision(p: V2, dir: V2, l: [V2; 2]) -> Option<f32> {
 	let dl = l[1] - l[0];
 	let pa = p - l[0];
 
@@ -16,7 +36,7 @@ pub fn ray_lineseg_collision(p: V2, dir: V2, l: [V2; 2]) -> Option<V2> {
 	if k <= 0f32 || j <= 0f32 || j >= 1f32 {
 		return None
 	}
-	Some(p + dir * k)
+	Some(k)
 }
 
 pub fn lineseg_collision(a: [V2; 2], b: [V2; 2]) -> bool {
@@ -301,6 +321,10 @@ mod test {
 		assert!((f1 - f2).abs() < FEPS)
 	}
 
+	fn vtest(v1: V2, v2: V2) {
+		assert!((v1 - v2).norm() < FEPS)
+	}
+
 	#[test]
 	fn test_angle_dist() {
 		ftest(angle_dist(-PI, 1f32), 1f32 - PI);
@@ -309,6 +333,8 @@ mod test {
 		ftest(angle_dist(1f32, 0f32), -1f32);
 	}
 
+	const RT2: f32 = std::f32::consts::SQRT_2;
+
 	#[test]
 	fn test_ray_lineseg_collision() {
 		let result = ray_lineseg_collision(
@@ -316,7 +342,7 @@ mod test {
 			V2::new(1f32, 1f32).normalize(),
 			[V2::new(0f32, 1f32), V2::new(1f32, 0f32)],
 		).unwrap();
-		assert!((result - V2::new(0.5, 0.5)).norm() < FEPS);
+		ftest(result, RT2 / 2f32);
 
 		let result = ray_lineseg_collision(
 			V2::new(0f32, 0f32),
@@ -324,5 +350,16 @@ mod test {
 			[V2::new(1f32, 0f32), V2::new(2f32, 0f32)],
 		);
 		assert!(result.is_none());
+	}
+
+	#[test]
+	fn test_incircle() {
+		let (pos, rad) = incircle([
+			V2::new(0f32, 2f32 + RT2),
+			V2::new(2f32 + RT2, 0f32),
+			V2::new(0f32, 0f32),
+		]);
+		vtest(pos, V2::new(1f32, 1f32));
+		ftest(rad, 1f32);
 	}
 }
